@@ -24,6 +24,7 @@
 		AC3430FB1A4F8EFC005EDC87 /* objSudoku.m in Sources */ = {isa = PBXBuildFile; fileRef = AC3430F41A4F8EFC005EDC87 /* objSudoku.m */; };
 		AC3431011A4F962F005EDC87 /* SudokuModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC3431001A4F962F005EDC87 /* SudokuModel.swift */; };
 		AC3431031A4F963E005EDC87 /* SudokuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC3431021A4F963E005EDC87 /* SudokuController.swift */; };
+		ACCEA80A1A553F2D00D523BE /* MenuScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = ACCEA8091A553F2D00D523BE /* MenuScene.sks */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,6 +61,7 @@
 		AC3430FF1A4F918E005EDC87 /* Sudoku-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Sudoku-Bridging-Header.h"; sourceTree = "<group>"; };
 		AC3431001A4F962F005EDC87 /* SudokuModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SudokuModel.swift; sourceTree = "<group>"; };
 		AC3431021A4F963E005EDC87 /* SudokuController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SudokuController.swift; sourceTree = "<group>"; };
+		ACCEA8091A553F2D00D523BE /* MenuScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = MenuScene.sks; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,6 +110,7 @@
 				AC3430AB1A4F805F005EDC87 /* GameScene.swift */,
 				AC3430AD1A4F805F005EDC87 /* GameViewController.swift */,
 				AC3430A91A4F805F005EDC87 /* GameScene.sks */,
+				ACCEA8091A553F2D00D523BE /* MenuScene.sks */,
 				AC3430AF1A4F805F005EDC87 /* Main.storyboard */,
 				AC3430B21A4F805F005EDC87 /* Images.xcassets */,
 				AC3430B41A4F805F005EDC87 /* LaunchScreen.xib */,
@@ -246,6 +249,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AC3430B61A4F805F005EDC87 /* LaunchScreen.xib in Resources */,
+				ACCEA80A1A553F2D00D523BE /* MenuScene.sks in Resources */,
 				AC3430B31A4F805F005EDC87 /* Images.xcassets in Resources */,
 				AC3430AA1A4F805F005EDC87 /* GameScene.sks in Resources */,
 				AC3430CC1A4F8074005EDC87 /* Entitlements.plist in Resources */,

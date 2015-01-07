@@ -4,7 +4,7 @@
 //  Sudoku
 //
 //  Created by Chen Xi on 14/12/28.
-//  Copyright (c) 2014年 Chen Xi. All rights reserved.
+//  Copyright (c) 2014 Chen Xi. All rights reserved.
 //
 
 import Foundation
@@ -12,11 +12,15 @@ import SpriteKit
 
 class GameController {
     let model = GameModel(), iNone = 0, iHigh = 1, iSel = 2
-    var tiles: [TileView?], resources: Resources, lastTouched: TileView? = nil
+    var tiles: [TileView?]
+    , resources: Resources
+    , lastTouched: TileView? = nil
+    , status: GameStatus!
     
-    init(res: Resources!) {
+    init(res: Resources!, stat: GameStatus!) {
         tiles = []
         resources = res
+        status = stat
         for i in 0..<90 {
             tiles.append(nil)
         }
@@ -24,6 +28,7 @@ class GameController {
     
     func startNewGame() {
         model.newGame(level: 1)
+        lastTouched = nil
         
         var dcnt = [0, 0, 0, 0, 0, 0, 0, 0, 0]
         for i in 0..<81 {
@@ -31,10 +36,12 @@ class GameController {
                 let dInit = model.initial.TileAtIndex(i)
                 if dInit == 0 {
                     t.type = 0
+                    t.given = false
                     t.status = 0
                     t.digit = model.final.TileAtIndex(i)
                 } else {
-                    t.type = 2
+                    t.type = 1
+                    t.given = true
                     t.status = 0
                     t.digit = dInit
                     dcnt[dInit-1] += 1
@@ -50,6 +57,8 @@ class GameController {
                 t.update()
             }
         }
+        status.reset()
+        status.update()
     }
     
     func initTile(index: Int, btn: SKSpriteNode!, lbl: SKLabelNode) -> TileView
@@ -102,6 +111,38 @@ class GameController {
         }
     }
     
+    func getFullScore(#row: Int, col: Int) -> Int {
+        let mtxRowBase = row / 3 * 3, mtxColBase = col / 3 * 3
+        var rMsk = 0, cMsk = 0, mMsk = 0
+        for i in 0..<9 {
+            let mr = mtxRowBase + i/3, mc = mtxColBase + i%3
+            
+            if let t = tiles[row*9+i] {
+                if t.type != 0 {
+                    rMsk |= 1 << (t.digit-1)
+                }
+            }
+            
+            if let t = tiles[i*9+col] {
+                if t.type != 0 {
+                    cMsk |= 1 << (t.digit-1)
+                }
+            }
+            
+            if let t = tiles[mr*9+mc] {
+                if t.type != 0 {
+                    mMsk |= 1 << (t.digit-1)
+                }
+            }
+        }
+        
+        var r = (rMsk == 0x01FF ? 1 : 0) + (cMsk == 0x01FF ? 1 : 0) + (mMsk == 0x01FF ? 1 : 0)
+        if r == 0 {
+            return 0
+        }
+        return 1 << (r-1)
+    }
+    
     func onTouchButton(tile: TileView!) {
         resetStatus()
         
@@ -115,15 +156,25 @@ class GameController {
                 if last.digit == tile.digit {
                     // correct!
                     tile.row += 1
+                    var score = 1
                     if tile.row != 9 {
                         highlightDigit(tile.digit)
+                        last.setStatus(iSel)
+                    } else {
+                        score = 5
                     }
+                    
                     tile.update()
                     last.setType(1)
                     lastTouched = nil
-                } else {
+                    
+                    score += getFullScore(row: last.row, col: last.col) * 10
+                    status.addScore(score)
+               } else {
                     // play error animation
                     last.setStatus(iSel)
+                    status.wrong++
+                    status.addScore(-3)
                 }
                 return
             }
@@ -171,14 +222,14 @@ class GameController {
 }
 
 class TileView {
-    var button: SKSpriteNode!, label: SKLabelNode!, resources: Resources!, labelCount: SKLabelNode? = nil,
-    type = 0, status = 0, digit = 0, index = 0, row = 0, col = 0
+    var button: SKSpriteNode!, label: SKLabelNode!, resources: Resources!,
+    labelCount: SKLabelNode? = nil,
+    type = 0, status = 0, digit = 0, index = 0, row = 0, col = 0, given = false
     
     /*
     * type
     *   0: empty
     *   1: fill
-    *   2: given
     *   3: button
     *
     * status
@@ -187,7 +238,7 @@ class TileView {
     *   2: selected
     */
     
-    init(btn: SKSpriteNode!, lbl: SKLabelNode, res: Resources!, idx: Int)
+    init(btn: SKSpriteNode!, lbl: SKLabelNode!, res: Resources!, idx: Int)
     {
         resources = res
         button = btn
@@ -199,11 +250,13 @@ class TileView {
     func update() {
         label.text = "\(digit)"
         label.hidden = type == 0
-        if type == 3 {
+        if type == 2 {
             labelCount?.text = "\(row)"
-            button.texture = row == 9 ? resources.buttons[9 + 1] : resources.buttons[9 + status]
+            label.fontColor = UIColor.redColor()
+            button.texture = row == 9 ? resources.buttons[6 + 1] : resources.buttons[6 + status]
         } else {
             button.texture = resources.buttons[type*3 + status]
+            label.fontColor = given ? UIColor.blackColor() : UIColor.whiteColor()
         }
     }
     
@@ -228,11 +281,77 @@ class TileView {
         }
     }
     
+    func setGiven(v: Bool) {
+        if given != v {
+            given = v
+            update()
+        }
+    }
+    
     func isTile() -> Bool {
-        return type != 3;
+        return type != 3
     }
     
     func isButton() -> Bool {
-        return type == 3;
+        return type == 3
+    }
+}
+
+class GameStatus {
+    var lblTime: SKLabelNode!, lblScore: SKLabelNode!, lblWrong: SKLabelNode!
+    , score = 0, wrong = 0, seconds = 0, startTime = NSDate.timeIntervalSinceReferenceDate(), paused = true
+    , lastScore = 0, lastWrong = 0, lastSeconds = 0, baseSeconds = 0.0, scoreTimes: Float = 10.0
+    
+    init(Time: SKLabelNode!, Score: SKLabelNode!, Wrong: SKLabelNode!) {
+        lblTime = Time
+        lblScore = Score
+        lblWrong = Wrong
+    }
+    
+    func reset() {
+        score = 0
+        wrong = 0
+        seconds = 0
+        baseSeconds = 0
+        startTime = NSDate.timeIntervalSinceReferenceDate()
+        paused = false
+    }
+    
+    func pause() {
+        paused = true
+        baseSeconds += NSDate.timeIntervalSinceReferenceDate() - startTime
+        lastSeconds = 0
+    }
+    
+    func resume() {
+        startTime = NSDate.timeIntervalSinceReferenceDate()
+        paused = false
+    }
+    
+    func addScore(s: Int) {
+        score += Int(Float(s)*scoreTimes/(0.4+0.1*Float(lastSeconds / 30)))
+    }
+    
+    func update() {
+        if paused {
+            return
+        }
+        
+        if lastScore != score {
+            lblScore.text = String(format: "SCORE: %05d", score > 0 ? score : 0)
+            lastScore = score
+        }
+
+        if lastWrong != wrong {
+            lblWrong.text = String(format: "WRONG: %02d", wrong)
+            lastWrong = wrong
+        }
+
+        seconds = Int(NSDate.timeIntervalSinceReferenceDate() - startTime + baseSeconds)
+        if lastSeconds != seconds {
+            let min = seconds / 60, sec = seconds % 60
+            lblTime.text = String(format: "%02d:%02d", min, sec)
+            lastSeconds = seconds
+        }
     }
 }

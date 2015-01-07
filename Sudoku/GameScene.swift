@@ -16,16 +16,13 @@ class Resources {
         let btnRes = SKTexture(imageNamed: "buttons")
         , imgWidth = btnRes.size().width
         , imgHeight = btnRes.size().height
-        , btnSize = imgHeight - 2
-        , yFrom = 1.0 / imgHeight
-        , ySize = (imgHeight - 2) / imgHeight
-        , btnW = (1.0+btnSize) / imgWidth
-        , xSize = btnSize / imgWidth
+        , btnSize = imgHeight
+        , btnW = btnSize / imgWidth
         
-        var x = 1.0/imgWidth
-        for i in 0..<12 {
+        var x = CGFloat(0.0)
+        for i in 0..<9 {
             buttons.append(SKTexture(
-                rect: CGRect(x: x, y: yFrom, width: xSize, height: ySize),
+                rect: CGRect(x: x, y: 0, width: btnW, height: 1.0),
                 inTexture: btnRes
                 ))
             x += btnW
@@ -47,6 +44,10 @@ class GameScene: SKScene {
     
     override func didMoveToView(view: SKView) {
         /* Setup your scene here */
+        if gamer != nil {
+            return
+        }
+        
         self.size = UIScreen.mainScreen().bounds.size
         
         let res = Resources()
@@ -59,10 +60,9 @@ class GameScene: SKScene {
         , frameSize = buttonSize * 3 + borderSize * 4
         , xCenter = CGRectGetMidX(self.frame)
         , yCenter = CGRectGetMidY(self.frame)
-        , gcer = GameController(res: res)
         , bg = SKShapeNode(rectOfSize: CGSize(width: bgSize+1, height: bgSize+1))
-        , frmColor1 = UIColor(red: 0, green: 0, blue: 0.3, alpha: 1)
-        , frmColor2 = UIColor(red: 0, green: 0.5, blue: 0, alpha: 1)
+        , frmColor1 = UIColor(red: 0, green: 0, blue: 0.4, alpha: 1)
+        , frmColor2 = UIColor(red: 0.4, green: 0, blue: 0, alpha: 1)
         
         bg.fillColor = frmColor1
         bg.strokeColor = UIColor.whiteColor()
@@ -91,11 +91,42 @@ class GameScene: SKScene {
         , Y0 = yCenter + CGFloat(frameSize/2-borderSize) - tileSize*4
         , fontSize = CGFloat(buttonSize)*0.7
         
+        // add time label
+        let lblTime = SKLabelNode(text: "00:00")
+        lblTime.fontSize = fontSize*0.7
+        lblTime.position = CGPoint(
+            x: xCenter,
+            y: Y0 - tileSize*2.8 )
+        lblTime.fontColor = UIColor.blackColor()
+        lblTime.zPosition = 2.0
+        self.addChild(lblTime)
+        
+        // add score label
+        let lblScore = SKLabelNode(text: "SCORE: 00000")
+        lblScore.fontSize = fontSize*0.7
+        lblScore.position = CGPoint(
+            x: CGFloat(blankSize+borderSize) + CGFloat(lblScore.frame.width/2.0),
+            y: Y0 - tileSize*2.8 )
+        lblScore.fontColor = UIColor(red: 0, green: 0.3, blue: 0.3, alpha: 1)
+        lblScore.zPosition = 2.0
+        self.addChild(lblScore)
+        
+        // add wrong label
+        let lblWrong = SKLabelNode(text: "WRONG: 00")
+        lblWrong.fontSize = fontSize*0.7
+        lblWrong.position = CGPoint(
+            x: self.frame.width - lblWrong.frame.width/2.0 - CGFloat(blankSize+borderSize),
+            y: Y0 - tileSize*2.8 )
+        lblWrong.fontColor = UIColor(red: 0.8, green: 0, blue: 0, alpha: 1)
+        lblWrong.zPosition = 2.0
+        self.addChild(lblWrong)
+        
+        let gcer = GameController(res: res, stat: GameStatus(Time: lblTime, Score: lblScore, Wrong: lblWrong))
         // create tiles
         for row in 0..<9 {
             for col in 0..<9 {
                 let btn = SKSpriteNode(color: UIColor.redColor(), size: res.buttons[0].size())
-                btn.texture = res.buttons[(col+row)%10]
+                //btn.texture = res.buttons[(col+row)%9]
                 btn.setScale(scaleButton)
                 btn.position = CGPoint(
                     x: X0 + CGFloat(col)*tileSize + CGFloat(col/3*borderSize),
@@ -106,10 +137,11 @@ class GameScene: SKScene {
                 //label.hidden = true
                 label.fontName = "AmericanTypewriter-Bold"
                 label.fontSize = fontSize
-                label.fontColor = UIColor.redColor()
+                label.fontColor = UIColor.whiteColor()
                 label.position = CGPoint(
                     x: X0 + CGFloat(col)*tileSize + CGFloat(col/3*borderSize),
-                    y: Y0 + CGFloat(row)*tileSize + CGFloat(row/3*borderSize) - fontSize*0.35 )
+                    y: Y0 + CGFloat(row)*tileSize + CGFloat(row/3*borderSize) - fontSize*0.4 )
+                label.zPosition = 0.5
                 self.addChild(label)
                 
                 //*
@@ -126,7 +158,7 @@ class GameScene: SKScene {
             btn.setScale(scaleButton*1.05)
             btn.position = CGPoint(
                 x: X0 + CGFloat(col)*tileSize + CGFloat(col/3*borderSize),
-                y: Y0 - 1.618*tileSize )
+                y: Y0 - 1.38*tileSize )
             btn.texture = res.buttons[1]
             //btn.zPosition = 1.0
             self.addChild(btn)
@@ -138,20 +170,22 @@ class GameScene: SKScene {
             label.fontColor = UIColor.redColor()
             label.position = CGPoint(
                 x: X0 + CGFloat(col)*tileSize + CGFloat(col/3*borderSize),
-                y: Y0 - 1.618*tileSize - fontSize*0.35 )
+                y: Y0 - 1.38*tileSize - fontSize*0.35 )
+            label.zPosition = 0.5
             self.addChild(label)
             
             lblcnt.fontName = "AmericanTypewriter"
             lblcnt.fontSize = fontSize*0.4
             lblcnt.fontColor = UIColor.blueColor()
             lblcnt.position = CGPoint(
-                x: X0 + CGFloat(col)*tileSize + CGFloat(col/3*borderSize) + lblcnt.frame.width*1.1,
-                y: Y0 - tileSize - fontSize*0.65 )
-            self.addChild(lblcnt)
+                x: X0 + CGFloat(col)*tileSize + CGFloat(col/3*borderSize) + lblcnt.frame.width*1.45,
+                y: Y0 - 1.38*tileSize - fontSize*0.6 )
+            lblcnt.zPosition = 0.6
+           self.addChild(lblcnt)
             
             let t = gcer.initTile(81+col, btn: btn, lbl: label)
             t.setDigit(col+1)
-            t.setType(3)
+            t.setType(2)
             t.col = col+1
             t.row = -1
             t.labelCount = lblcnt
@@ -162,7 +196,7 @@ class GameScene: SKScene {
         btnStart.fontSize = fontSize*0.7
         btnStart.position = CGPoint(
             x: xCenter*0.618,
-            y: Y0 - 1.618*tileSize*2 )
+            y: Y0 - tileSize*3.5 )
         btnStart.fontColor = UIColor.blueColor()
         btnStart.zPosition = 2.0
         self.addChild(btnStart)
@@ -192,5 +226,8 @@ class GameScene: SKScene {
    
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
+        if let g = gamer {
+            g.status.update()
+        }
     }
 }

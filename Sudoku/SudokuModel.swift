@@ -19,12 +19,12 @@ class GameModel {
     
     func newGame(level: Int = 0) {
         let g = OSudokuData.Generate(), c = g.Cross()
-        var initialCount = Int(arc4random_uniform(2))
+        var initialCount = Int(arc4random_uniform(5))
         switch (level) {
         case 1: // easy
-            initialCount += 32;
+            initialCount += 38;
         case 2: // medium
-            initialCount += 30;
+            initialCount += 33;
         case 3: // hard
             initialCount += 28;
         default: // very hard
